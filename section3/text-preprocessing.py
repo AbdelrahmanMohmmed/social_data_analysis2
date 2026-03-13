@@ -1,4 +1,5 @@
 import argparse
+import os
 import pandas as pd
 import re
 from textblob import TextBlob
@@ -40,6 +41,12 @@ def fix_spelling(text):
 def extract_tags(df):
     if "app" not in df.columns:
         df["app"] = "unknown"
+    return df
+
+def add_source(df, input_path):
+    filename = os.path.basename(input_path)         # e.g. amazon_reviews.csv
+    source = os.path.splitext(filename)[0]          # e.g. amazon_reviews
+    df["source"] = source
     return df
 
 # ---------------- PIPELINE ---------------- #

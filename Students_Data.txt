@@ -1,6 +1,0 @@
-Name: Maged, Level: Three, Program: Data Science, CGPA: 3.74
-Name: Ahmed, Level: Two, Program: Data Science, CGPA: 3.36
-Name: Farah, Level: Three, Program: Cyber Security, CGPA: 2.82
-Name: Hana, Level: Three, Program: Data Science, CGPA: 3.89
-Name: Nour, Level: Three, Program: Data Science, CGPA: 2.53
-Name: Hamza, Level: Two, Program: Cyber Security, CGPA: 3.45
