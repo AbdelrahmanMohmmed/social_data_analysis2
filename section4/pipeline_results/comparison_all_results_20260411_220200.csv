@@ -1,0 +1,9 @@
+Dataset,Combination,Model,Accuracy,Precision,Recall,F1-Score
+Minimal (Emojis Only),tfidf_svm_rbf,SVM (rbf),0.8,0.7458333333333333,0.8,0.7704545454545455
+Minimal (Emojis Only),tfidf_svm_linear,SVM (linear),0.8,0.7395833333333334,0.8,0.7685834502103787
+Stop Words Removed,tfidf_svm_rbf,SVM (rbf),0.8,0.7458333333333333,0.8,0.7704545454545455
+Stop Words Removed,tfidf_svm_linear,SVM (linear),0.8,0.7395833333333334,0.8,0.7685834502103787
+Lemmatization Only,tfidf_svm_rbf,SVM (rbf),0.8,0.7458333333333333,0.8,0.7704545454545455
+Lemmatization Only,tfidf_svm_linear,SVM (linear),0.8,0.7395833333333334,0.8,0.7685834502103787
+Full Preprocessing,tfidf_svm_rbf,SVM (rbf),0.8,0.7458333333333333,0.8,0.7704545454545455
+Full Preprocessing,tfidf_svm_linear,SVM (linear),0.8,0.7395833333333334,0.8,0.7685834502103787
