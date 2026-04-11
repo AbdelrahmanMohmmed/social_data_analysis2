@@ -1,0 +1,31 @@
+{
+  "svm": {
+    "model": "SVM (linear)",
+    "parameters": {
+      "kernel": "linear",
+      "C": 1.0
+    },
+    "accuracy": 0.8,
+    "precision": 0.7395833333333334,
+    "recall": 0.8,
+    "f1_score": 0.7685834502103787,
+    "confusion_matrix": [
+      [
+        12,
+        0,
+        3
+      ],
+      [
+        2,
+        0,
+        1
+      ],
+      [
+        2,
+        0,
+        20
+      ]
+    ],
+    "test_samples": 40
+  }
+}

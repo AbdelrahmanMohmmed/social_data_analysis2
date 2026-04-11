@@ -4,6 +4,17 @@ import re
 import os
 from pathlib import Path
 from textblob import TextBlob
+from nltk.corpus import stopwords
+import nltk
+
+# Download stopwords if not available
+try:
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('stopwords')
+
+# Get English stopwords
+STOP_WORDS = set(stopwords.words('english'))
 
 # ---------------- CLEANING FUNCTIONS ---------------- #
 def lowercase(text):
@@ -38,6 +49,11 @@ def fix_spelling(text):
     blob = TextBlob(str(text))
     return str(blob.correct())
 
+def remove_stopwords(text):
+    words = str(text).lower().split()
+    filtered = [word for word in words if word not in STOP_WORDS]
+    return " ".join(filtered)
+
 def extract_tags(df):
     if "app" not in df.columns:
         df["app"] = "unknown"
@@ -58,6 +74,8 @@ def preprocess(df, args):
         df["content"] = df["content"].apply(remove_emojis)
     if args.remove_punctuation:
         df["content"] = df["content"].apply(remove_punctuation)
+    if args.remove_stopwords:
+        df["content"] = df["content"].apply(remove_stopwords)
     if args.lemmatize:
         df["content"] = df["content"].apply(lemmatize_text)
     if args.fix_spelling:
@@ -99,6 +117,7 @@ def main():
     parser.add_argument("--remove_urls",         action="store_true")
     parser.add_argument("--remove_emojis",       action="store_true")
     parser.add_argument("--remove_punctuation",  action="store_true")
+    parser.add_argument("--remove_stopwords",    action="store_true")
     parser.add_argument("--lemmatize",           action="store_true")
     parser.add_argument("--fix_spelling",        action="store_true")
     parser.add_argument("--extract_tags",        action="store_true")
@@ -130,7 +149,7 @@ def main():
     os.makedirs(Path(args.output).parent, exist_ok=True)
     final_df.to_csv(args.output, index=False)
 
-    print(f"\nDone! {len(final_df)} total rows saved → {args.output}")
+    print(f"\nDone! {len(final_df)} total rows saved -> {args.output}")
 
 if __name__ == "__main__":
     main()

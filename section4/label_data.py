@@ -28,9 +28,9 @@ if args.size is not None:
         print(f"Warning: --size {args.size} exceeds dataset length {len(df)}, using full dataset")
     else:
         df = df.sample(n=args.size, random_state=42).reset_index(drop=True)
-        print(f"✓ Sampled {args.size} records from dataset")
+        print(f"[+] Sampled {args.size} records from dataset")
 
-print(f"✓ Working on {len(df)} records\n")
+print(f"[+] Working on {len(df)} records\n")
 annotators = {}   # will hold {"annotator_name": pd.Series}
 
 # ── Annotator: score-based ────────────────────────────────────────────────────
@@ -44,7 +44,7 @@ if args.score_based:
         else:            return "Positive"
 
     annotators["score_based"] = df["score"].apply(score_to_sentiment)
-    print("✓ Annotator added: score-based")
+    print("[+] Annotator added: score-based")
 
 # ── Annotator: rule-based NLP ─────────────────────────────────────────────────
 if args.rule_based:
@@ -66,7 +66,7 @@ if args.rule_based:
         else:           return "Neutral"
 
     annotators["rule_based"] = df["content"].apply(text_sentiment)
-    print("✓ Annotator added: rule-based NLP")
+    print("[+] Annotator added: rule-based NLP")
 
 # ── Annotator: random labels ──────────────────────────────────────────────────
 if args.random_label:
@@ -75,7 +75,7 @@ if args.random_label:
     annotators["random_label"] = pd.Series(
         [random.choice(labels) for _ in range(len(df))], index=df.index
     )
-    print("✓ Annotator added: random labels")
+    print("[+] Annotator added: random labels")
 
 # ── Add annotator columns to df ───────────────────────────────────────────────
 annotator_names = list(annotators.keys())
@@ -105,7 +105,7 @@ for i in range(len(annotator_names)):
         a, b = annotator_names[i], annotator_names[j]
         k = cohen_kappa_score(df[a], df[b])
         kappas.append(k)
-        print(f"{a:20s} vs {b:20s}  →  κ = {k:.3f}")
+        print(f"{a:20s} vs {b:20s}  -> kappa = {k:.3f}")
 
 avg_kappa = np.mean(kappas)
 print(f"\nAverage Kappa: {avg_kappa:.3f}")
@@ -128,4 +128,4 @@ print(f"\nTotal records labeled: {len(df)}")
 
 # ── Save ──────────────────────────────────────────────────────────────────────
 df.to_csv(args.output, index=False)
-print(f"\nSaved to {args.output}")
+print(f"\n[+] Saved to {args.output}")

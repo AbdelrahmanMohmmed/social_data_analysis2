@@ -1,0 +1,31 @@
+{
+  "svm": {
+    "model": "SVM (rbf)",
+    "parameters": {
+      "kernel": "rbf",
+      "C": 1.0
+    },
+    "accuracy": 0.8,
+    "precision": 0.7458333333333333,
+    "recall": 0.8,
+    "f1_score": 0.7704545454545455,
+    "confusion_matrix": [
+      [
+        13,
+        0,
+        2
+      ],
+      [
+        2,
+        0,
+        1
+      ],
+      [
+        3,
+        0,
+        19
+      ]
+    ],
+    "test_samples": 40
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "timestamp": "20260411_214753",
+  "total_combinations_trained": 12,
+  "datasets": [
+    "minimal",
+    "stopwords",
+    "lemmatization",
+    "full"
+  ],
+  "best_overall": {
+    "dataset": "Full Preprocessing",
+    "combination": "tfidf_svm_rbf",
+    "f1_score": 0.7704545454545455
+  },
+  "statistics": {
+    "mean_f1": 0.769207148625101,
+    "max_f1": 0.7704545454545455,
+    "min_f1": 0.7685834502103787
+  }
+}
