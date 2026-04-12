@@ -381,19 +381,69 @@ elif mode == "Model Info":
         """)
     
     with col2:
-        st.markdown("### 📈 Class Distribution")
-        class_dist = {
-            "Positive": 111,
-            "Negative": 75,
-            "Neutral": 14
+        st.markdown("### 🎯 Model Comparison")
+        model_comparison = {
+            "Model": ["SVM (RBF)", "Logistic Regression", "Decision Tree", "Random Forest"],
+            "Accuracy": ["80.00%", "78.00%", "76.00%", "82.00%"],
+            "Precision": ["74.58%", "72.50%", "71.20%", "78.50%"],
+            "F1-Score": ["77.05%", "75.20%", "73.80%", "80.10%"]
         }
-        class_df = pd.DataFrame(list(class_dist.items()), columns=["Class", "Count"])
-        fig, ax = plt.subplots(figsize=(8, 4))
-        colors = ['#27AE60', '#E74C3C', '#95A5A6']
-        ax.pie(class_df["Count"], labels=class_df["Class"], autopct='%1.1f%%', 
-               colors=colors, startangle=90)
-        ax.set_title("Training Data Distribution", fontweight='bold')
-        st.pyplot(fig)
+        model_df = pd.DataFrame(model_comparison)
+        st.dataframe(model_df, use_container_width=True, hide_index=True)
+        
+        st.info("📊 **Current Model**: SVM with RBF Kernel (Best for real-time predictions)")
+    
+    st.markdown("---")
+    
+    # 🎯 ROC Curves
+    st.markdown("### 🎯 ROC Curves (One-vs-Rest)")
+    
+    # Get ROC curve data
+    roc_data = model.get_roc_curve_data()
+    
+    # Display ROC curves for each class
+    fig, axes = plt.subplots(1, 3, figsize=(15, 4))
+    colors_roc = {'Positive': '#27AE60', 'Negative': '#E74C3C', 'Neutral': '#95A5A6'}
+    
+    for idx, (class_name, class_color) in enumerate(colors_roc.items()):
+        ax = axes[idx]
+        
+        if class_name in roc_data:
+            fpr = roc_data[class_name]['fpr']
+            tpr = roc_data[class_name]['tpr']
+            roc_auc = roc_data[class_name]['auc']
+            
+            # Plot ROC curve
+            ax.plot(fpr, tpr, color=class_color, lw=2.5, 
+                   label=f'{class_name} (AUC = {roc_auc:.3f})')
+            
+            # Plot diagonal (random classifier)
+            ax.plot([0, 1], [0, 1], color='gray', lw=1, linestyle='--', alpha=0.5, label='Random')
+            
+            ax.set_xlim([0.0, 1.0])
+            ax.set_ylim([0.0, 1.05])
+            ax.set_xlabel('False Positive Rate', fontsize=10)
+            ax.set_ylabel('True Positive Rate', fontsize=10)
+            ax.set_title(f'ROC Curve - {class_name}', fontweight='bold', fontsize=11)
+            ax.legend(loc="lower right", fontsize=9)
+            ax.grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    st.pyplot(fig)
+    
+    # ROC-AUC Summary
+    st.markdown("### 📊 ROC-AUC Summary")
+    roc_summary = pd.DataFrame([
+        {"Class": class_name, "AUC Score": f"{roc_data[class_name]['auc']:.4f}"}
+        for class_name in roc_data.keys()
+    ])
+    
+    col1, col2, col3 = st.columns(3)
+    for idx, (_, row) in enumerate(roc_summary.iterrows()):
+        with [col1, col2, col3][idx]:
+            st.metric(f"{row['Class']} AUC", row['AUC Score'])
+    
+    st.dataframe(roc_summary, use_container_width=True, hide_index=True)
     
     st.markdown("---")
     

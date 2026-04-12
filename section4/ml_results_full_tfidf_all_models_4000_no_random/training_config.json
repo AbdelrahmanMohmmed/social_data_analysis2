@@ -1,0 +1,11 @@
+{
+  "dataset": "3962 samples - Clean labels (no random voting)",
+  "train_samples": 3169,
+  "test_samples": 793,
+  "features": "tfidf_303",
+  "classes": [
+    "Negative",
+    "Neutral",
+    "Positive"
+  ]
+}

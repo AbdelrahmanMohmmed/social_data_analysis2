@@ -9,16 +9,16 @@ import argparse
 parser = argparse.ArgumentParser(description="Sentiment labeling pipeline")
 parser.add_argument("--score-based",   action="store_true", help="Use star rating as annotator 1")
 parser.add_argument("--rule-based",    action="store_true", help="Use rule-based NLP as an annotator")
-parser.add_argument("--random-label",  action="store_true", help="Use random labels as an annotator")
+# parser.add_argument("--random-label",  action="store_true", help="Use random labels as an annotator")  # DISABLED: remove random voting
 parser.add_argument("--input",         type=str, default="all_cleaned.csv", help="Input CSV file")
 parser.add_argument("--output",        type=str, default="labeled_reviews.csv", help="Output CSV file")
 parser.add_argument("--size",          type=int, default=300, help="Number of records to label (default: all)")
 args = parser.parse_args()
 
-# Require at least 2 annotators for majority voting + Kappa
-active_flags = [args.score_based, args.rule_based, args.random_label]
+# Require at least 2 annotators for majority voting + Kappa (removed random_label option)
+active_flags = [args.score_based, args.rule_based]  # Only score-based and rule-based
 if sum(active_flags) < 2:
-    parser.error("You must enable at least 2 annotators (e.g. --rule-based --random-label)")
+    parser.error("You must enable at least 2 annotators (--score-based --rule-based)")
 
 # ── Load data ─────────────────────────────────────────────────────────────────
 df = pd.read_csv(args.input)
@@ -69,13 +69,14 @@ if args.rule_based:
     print("[+] Annotator added: rule-based NLP")
 
 # ── Annotator: random labels ──────────────────────────────────────────────────
-if args.random_label:
-    random.seed(42)
-    labels = ["Positive", "Negative", "Neutral"]
-    annotators["random_label"] = pd.Series(
-        [random.choice(labels) for _ in range(len(df))], index=df.index
-    )
-    print("[+] Annotator added: random labels")
+# DISABLED: Random labeling removed from voting process
+# if args.random_label:
+#     random.seed(42)
+#     labels = ["Positive", "Negative", "Neutral"]
+#     annotators["random_label"] = pd.Series(
+#         [random.choice(labels) for _ in range(len(df))], index=df.index
+#     )
+#     print("[+] Annotator added: random labels")
 
 # ── Add annotator columns to df ───────────────────────────────────────────────
 annotator_names = list(annotators.keys())

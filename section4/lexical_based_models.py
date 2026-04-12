@@ -123,7 +123,7 @@ if args.afinn:
         'hang': -2, 'crash': -3, 'don\'t': -1, 'not': -1, 'never': -2,
         'useless': -3, 'garbage': -4, 'waste': -2, 'scam': -4, 'fraud': -4,
         'disappointing': -2, 'unsatisfied': -2, 'unacceptable': -3,
-    }
+    } # affin dictionary wasn't used
     
     def negation_words():
         return {'not', 'no', 'never', 'neither', 'nobody', 'nothing', 'neither', "don't", "doesn't", "didn't", "hasn't", "haven't"}

@@ -6,6 +6,8 @@ import pickle
 from pathlib import Path
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import (accuracy_score, precision_score, recall_score, 
@@ -26,18 +28,24 @@ parser.add_argument("--feature-type",    choices=["tfidf", "glove", "both"], def
                     help="Which features to use: tfidf, glove, or both (default: tfidf)")
 parser.add_argument("--svm",             action="store_true", help="Train SVM classifier")
 parser.add_argument("--logistic",        action="store_true", help="Train Logistic Regression classifier")
+parser.add_argument("--decision-tree",   action="store_true", help="Train Decision Tree classifier")
+parser.add_argument("--random-forest",   action="store_true", help="Train Random Forest classifier")
 parser.add_argument("--test-size",       type=float, default=0.2,
                     help="Test set size (default: 0.2)")
 parser.add_argument("--svm-kernel",      choices=["linear", "rbf", "poly"], default="rbf",
                     help="SVM kernel type (default: rbf)")
 parser.add_argument("--svm-c",           type=float, default=1.0,
                     help="SVM C parameter (default: 1.0)")
+parser.add_argument("--dt-depth",        type=int, default=10,
+                    help="Decision Tree max depth (default: 10)")
+parser.add_argument("--rf-trees",        type=int, default=100,
+                    help="Random Forest number of trees (default: 100)")
 
 args = parser.parse_args()
 
 # Require at least 1 model
-if not args.svm and not args.logistic:
-    parser.error("You must enable at least 1 model (--svm and/or --logistic)")
+if not args.svm and not args.logistic and not args.decision_tree and not args.random_forest:
+    parser.error("You must enable at least 1 model (--svm, --logistic, --decision-tree, and/or --random-forest)")
 
 # ──────────────────────────────────────────────────────────────────────────────
 # ── LOAD DATA ─────────────────────────────────────────────────────────────────
@@ -194,6 +202,100 @@ if args.logistic:
     with open(lr_output, "wb") as f:
         pickle.dump(lr_model, f)
     print(f"[+] Model saved -> {lr_output}\n")
+
+# ──────────────────────────────────────────────────────────────────────────────
+# ── DECISION TREE ──────────────────────────────────────────────────────────────
+# ──────────────────────────────────────────────────────────────────────────────
+
+if args.decision_tree:
+    print("=" * 70)
+    print("Training Decision Tree Classifier")
+    print("=" * 70)
+    print(f"Max Depth: {args.dt_depth}\n")
+    
+    dt_model = DecisionTreeClassifier(max_depth=args.dt_depth, random_state=42)
+    dt_model.fit(X_train, y_train)
+    
+    y_pred_dt = dt_model.predict(X_test)
+    
+    # Metrics
+    accuracy = accuracy_score(y_test, y_pred_dt)
+    precision = precision_score(y_test, y_pred_dt, average='weighted', zero_division=0)
+    recall = recall_score(y_test, y_pred_dt, average='weighted', zero_division=0)
+    f1 = f1_score(y_test, y_pred_dt, average='weighted', zero_division=0)
+    cm = confusion_matrix(y_test, y_pred_dt)
+    
+    reports["decision_tree"] = {
+        "model": "Decision Tree",
+        "parameters": {"max_depth": args.dt_depth},
+        "accuracy": float(accuracy),
+        "precision": float(precision),
+        "recall": float(recall),
+        "f1_score": float(f1),
+        "confusion_matrix": cm.tolist(),
+        "test_samples": len(X_test)
+    }
+    
+    results_data["decision_tree_predictions"] = y_pred_dt.tolist()
+    
+    print(f"[+] Accuracy:  {accuracy:.4f}")
+    print(f"[+] Precision: {precision:.4f}")
+    print(f"[+] Recall:    {recall:.4f}")
+    print(f"[+] F1-Score:  {f1:.4f}")
+    print(f"\nConfusion Matrix:\n{cm}\n")
+    
+    # Save model
+    dt_output = Path(args.output_dir) / "decision_tree_model.pkl"
+    with open(dt_output, "wb") as f:
+        pickle.dump(dt_model, f)
+    print(f"[+] Model saved -> {dt_output}\n")
+
+# ──────────────────────────────────────────────────────────────────────────────
+# ── RANDOM FOREST ──────────────────────────────────────────────────────────────
+# ──────────────────────────────────────────────────────────────────────────────
+
+if args.random_forest:
+    print("=" * 70)
+    print("Training Random Forest Classifier")
+    print("=" * 70)
+    print(f"Number of Trees: {args.rf_trees}\n")
+    
+    rf_model = RandomForestClassifier(n_estimators=args.rf_trees, random_state=42, n_jobs=-1)
+    rf_model.fit(X_train, y_train)
+    
+    y_pred_rf = rf_model.predict(X_test)
+    
+    # Metrics
+    accuracy = accuracy_score(y_test, y_pred_rf)
+    precision = precision_score(y_test, y_pred_rf, average='weighted', zero_division=0)
+    recall = recall_score(y_test, y_pred_rf, average='weighted', zero_division=0)
+    f1 = f1_score(y_test, y_pred_rf, average='weighted', zero_division=0)
+    cm = confusion_matrix(y_test, y_pred_rf)
+    
+    reports["random_forest"] = {
+        "model": "Random Forest",
+        "parameters": {"n_estimators": args.rf_trees},
+        "accuracy": float(accuracy),
+        "precision": float(precision),
+        "recall": float(recall),
+        "f1_score": float(f1),
+        "confusion_matrix": cm.tolist(),
+        "test_samples": len(X_test)
+    }
+    
+    results_data["random_forest_predictions"] = y_pred_rf.tolist()
+    
+    print(f"[+] Accuracy:  {accuracy:.4f}")
+    print(f"[+] Precision: {precision:.4f}")
+    print(f"[+] Recall:    {recall:.4f}")
+    print(f"[+] F1-Score:  {f1:.4f}")
+    print(f"\nConfusion Matrix:\n{cm}\n")
+    
+    # Save model
+    rf_output = Path(args.output_dir) / "random_forest_model.pkl"
+    with open(rf_output, "wb") as f:
+        pickle.dump(rf_model, f)
+    print(f"[+] Model saved -> {rf_output}\n")
 
 # ──────────────────────────────────────────────────────────────────────────────
 # ── MODEL COMPARISON & SUMMARY ────────────────────────────────────────────────
