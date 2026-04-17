@@ -1,0 +1,15 @@
+{
+  "feature_file": "section4/model/labeled_clean_1_tfidf_matrix.csv",
+  "feature_type": "tfidf",
+  "n_features": 470,
+  "test_size": 0.2,
+  "train_samples": 160,
+  "test_samples": 40,
+  "classes": [
+    "Negative",
+    "Neutral",
+    "Positive",
+    "Very Negative",
+    "Very Positive"
+  ]
+}

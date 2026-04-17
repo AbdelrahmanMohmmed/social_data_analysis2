@@ -2,14 +2,12 @@ import pandas as pd
 from collections import Counter
 from sklearn.metrics import cohen_kappa_score
 import numpy as np
-import random
 import argparse
 
 # ── Argument parsing ──────────────────────────────────────────────────────────
 parser = argparse.ArgumentParser(description="Sentiment labeling pipeline")
 parser.add_argument("--score-based",   action="store_true", help="Use star rating as annotator 1")
 parser.add_argument("--rule-based",    action="store_true", help="Use rule-based NLP as an annotator")
-# parser.add_argument("--random-label",  action="store_true", help="Use random labels as an annotator")  # DISABLED: remove random voting
 parser.add_argument("--input",         type=str, default="all_cleaned.csv", help="Input CSV file")
 parser.add_argument("--output",        type=str, default="labeled_reviews.csv", help="Output CSV file")
 parser.add_argument("--size",          type=int, default=300, help="Number of records to label (default: all)")
@@ -68,16 +66,6 @@ if args.rule_based:
     annotators["rule_based"] = df["content"].apply(text_sentiment)
     print("[+] Annotator added: rule-based NLP")
 
-# ── Annotator: random labels ──────────────────────────────────────────────────
-# DISABLED: Random labeling removed from voting process
-# if args.random_label:
-#     random.seed(42)
-#     labels = ["Positive", "Negative", "Neutral"]
-#     annotators["random_label"] = pd.Series(
-#         [random.choice(labels) for _ in range(len(df))], index=df.index
-#     )
-#     print("[+] Annotator added: random labels")
-
 # ── Add annotator columns to df ───────────────────────────────────────────────
 annotator_names = list(annotators.keys())
 for name, series in annotators.items():
@@ -88,9 +76,16 @@ def majority_vote(row):
     votes = [row[name] for name in annotator_names]
     counts = Counter(votes)
     top = counts.most_common()
-    # Full tie → trust the first annotator mentioned in the command
-    if top[0][1] == 1:
+
+    # If there is a tie for top vote count, use truthLabel as tie-breaker when available.
+    top_count = top[0][1]
+    winners = [label for label, count in top if count == top_count]
+    if len(winners) > 1:
+        truth_label = row.get("truthLabel", np.nan)
+        if pd.notna(truth_label) and str(truth_label).strip() != "":
+            return str(truth_label).strip()
         return votes[0]
+
     return top[0][0]
 
 df["final_label"] = df.apply(majority_vote, axis=1)

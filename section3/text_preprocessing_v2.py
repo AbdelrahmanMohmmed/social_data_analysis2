@@ -13,8 +13,11 @@ try:
 except LookupError:
     nltk.download('stopwords')
 
-# Get English stopwords
-STOP_WORDS = set(stopwords.words('english'))
+# Keep negation words that are important for sentiment polarity.
+NEGATION_WORDS = {"no", "not", "nor", "never", "none", "n't"}
+
+# Get English stopwords, excluding negation words.
+STOP_WORDS = set(stopwords.words('english')) - NEGATION_WORDS
 
 # ---------------- CLEANING FUNCTIONS ---------------- #
 def lowercase(text):
@@ -121,6 +124,8 @@ def main():
     parser.add_argument("--lemmatize",           action="store_true")
     parser.add_argument("--fix_spelling",        action="store_true")
     parser.add_argument("--extract_tags",        action="store_true")
+    parser.add_argument("--data_size", type=int, default=200,
+                        help="Optional number of rows to keep in final output")
 
     args = parser.parse_args()
 
@@ -144,6 +149,13 @@ def main():
 
     # Concatenate everything into one dataframe
     final_df = pd.concat(dfs, ignore_index=True)
+
+    # Optionally limit output size
+    if args.data_size is not None:
+        if args.data_size <= 0:
+            print("Warning: --data_size must be > 0. Keeping all rows.")
+        else:
+            final_df = final_df.head(args.data_size)
 
     # Save single output file
     os.makedirs(Path(args.output).parent, exist_ok=True)

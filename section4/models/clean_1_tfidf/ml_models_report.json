@@ -1,0 +1,147 @@
+{
+  "svm": {
+    "model": "SVM (rbf)",
+    "parameters": {
+      "kernel": "rbf",
+      "C": 1.0
+    },
+    "accuracy": 0.625,
+    "precision": 0.51,
+    "recall": 0.625,
+    "f1_score": 0.5338345864661653,
+    "confusion_matrix": [
+      [
+        21,
+        0,
+        1,
+        0,
+        0
+      ],
+      [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        5,
+        0,
+        4,
+        0,
+        0
+      ],
+      [
+        3,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "test_samples": 40
+  },
+  "logistic_regression": {
+    "model": "Logistic Regression",
+    "parameters": {
+      "max_iter": 1000
+    },
+    "accuracy": 0.7,
+    "precision": 0.5578125,
+    "recall": 0.7,
+    "f1_score": 0.6130718954248365,
+    "confusion_matrix": [
+      [
+        21,
+        0,
+        1,
+        0,
+        0
+      ],
+      [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        2,
+        0,
+        7,
+        0,
+        0
+      ],
+      [
+        3,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "test_samples": 40
+  },
+  "random_forest": {
+    "model": "Random Forest",
+    "parameters": {
+      "n_estimators": 100
+    },
+    "accuracy": 0.65,
+    "precision": 0.626358695652174,
+    "recall": 0.65,
+    "f1_score": 0.6340975364504776,
+    "confusion_matrix": [
+      [
+        16,
+        4,
+        1,
+        1,
+        0
+      ],
+      [
+        2,
+        3,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        7,
+        0,
+        0
+      ],
+      [
+        3,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "test_samples": 40
+  }
+}

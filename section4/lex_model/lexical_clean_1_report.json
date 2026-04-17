@@ -1,0 +1,63 @@
+{
+  "vader": {
+    "model": "VADER",
+    "accuracy": 0.675,
+    "precision": 0.7474199134199133,
+    "recall": 0.675,
+    "f1_score": 0.6875211299435029,
+    "labels": [
+      "Negative",
+      "Neutral",
+      "Positive"
+    ],
+    "confusion_matrix": [
+      [
+        82,
+        19,
+        25
+      ],
+      [
+        7,
+        10,
+        9
+      ],
+      [
+        1,
+        4,
+        43
+      ]
+    ]
+  },
+  "afinn": {
+    "model": "AFINN",
+    "afinn_lexicon_file": "/media/abdo/Games/social_data_analysis/section4/AFINN/AFINN-111.txt",
+    "negation_handling": "enabled",
+    "dictionary_size": 2477,
+    "accuracy": 0.635,
+    "precision": 0.7427786009710485,
+    "recall": 0.635,
+    "f1_score": 0.6594094029540253,
+    "labels": [
+      "Negative",
+      "Neutral",
+      "Positive"
+    ],
+    "confusion_matrix": [
+      [
+        75,
+        30,
+        21
+      ],
+      [
+        6,
+        13,
+        7
+      ],
+      [
+        2,
+        7,
+        39
+      ]
+    ]
+  }
+}

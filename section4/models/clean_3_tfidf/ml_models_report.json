@@ -1,0 +1,147 @@
+{
+  "svm": {
+    "model": "SVM (rbf)",
+    "parameters": {
+      "kernel": "rbf",
+      "C": 1.0
+    },
+    "accuracy": 0.675,
+    "precision": 0.6625,
+    "recall": 0.675,
+    "f1_score": 0.6116666666666667,
+    "confusion_matrix": [
+      [
+        21,
+        0,
+        1,
+        0,
+        0
+      ],
+      [
+        4,
+        1,
+        0,
+        0,
+        0
+      ],
+      [
+        4,
+        0,
+        5,
+        0,
+        0
+      ],
+      [
+        3,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "test_samples": 40
+  },
+  "logistic_regression": {
+    "model": "Logistic Regression",
+    "parameters": {
+      "max_iter": 1000
+    },
+    "accuracy": 0.7,
+    "precision": 0.5578125,
+    "recall": 0.7,
+    "f1_score": 0.6130718954248365,
+    "confusion_matrix": [
+      [
+        21,
+        0,
+        1,
+        0,
+        0
+      ],
+      [
+        5,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        2,
+        0,
+        7,
+        0,
+        0
+      ],
+      [
+        3,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "test_samples": 40
+  },
+  "random_forest": {
+    "model": "Random Forest",
+    "parameters": {
+      "n_estimators": 100
+    },
+    "accuracy": 0.625,
+    "precision": 0.610733695652174,
+    "recall": 0.625,
+    "f1_score": 0.6148667672197085,
+    "confusion_matrix": [
+      [
+        16,
+        4,
+        1,
+        1,
+        0
+      ],
+      [
+        3,
+        2,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        2,
+        7,
+        0,
+        0
+      ],
+      [
+        3,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "test_samples": 40
+  }
+}

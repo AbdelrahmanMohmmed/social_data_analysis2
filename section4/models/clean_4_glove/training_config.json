@@ -1,0 +1,15 @@
+{
+  "feature_file": "section4/model/labeled_clean_4_glove_embeddings.csv",
+  "feature_type": "glove",
+  "n_features": 100,
+  "test_size": 0.2,
+  "train_samples": 160,
+  "test_samples": 40,
+  "classes": [
+    "Negative",
+    "Neutral",
+    "Positive",
+    "Very Negative",
+    "Very Positive"
+  ]
+}

@@ -1,0 +1,147 @@
+{
+  "svm": {
+    "model": "SVM (rbf)",
+    "parameters": {
+      "kernel": "rbf",
+      "C": 1.0
+    },
+    "accuracy": 0.7,
+    "precision": 0.6260416666666666,
+    "recall": 0.7,
+    "f1_score": 0.6440853264382675,
+    "confusion_matrix": [
+      [
+        20,
+        1,
+        1,
+        0,
+        0
+      ],
+      [
+        4,
+        1,
+        0,
+        0,
+        0
+      ],
+      [
+        2,
+        0,
+        7,
+        0,
+        0
+      ],
+      [
+        3,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "test_samples": 40
+  },
+  "logistic_regression": {
+    "model": "Logistic Regression",
+    "parameters": {
+      "max_iter": 1000
+    },
+    "accuracy": 0.725,
+    "precision": 0.7043103448275863,
+    "recall": 0.725,
+    "f1_score": 0.6730392156862746,
+    "confusion_matrix": [
+      [
+        20,
+        0,
+        1,
+        1,
+        0
+      ],
+      [
+        4,
+        1,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        8,
+        0,
+        0
+      ],
+      [
+        3,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "test_samples": 40
+  },
+  "random_forest": {
+    "model": "Random Forest",
+    "parameters": {
+      "n_estimators": 100
+    },
+    "accuracy": 0.725,
+    "precision": 0.6843103448275862,
+    "recall": 0.725,
+    "f1_score": 0.6625128998968008,
+    "confusion_matrix": [
+      [
+        20,
+        0,
+        2,
+        0,
+        0
+      ],
+      [
+        4,
+        1,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        8,
+        0,
+        0
+      ],
+      [
+        3,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0,
+        0,
+        0
+      ]
+    ],
+    "test_samples": 40
+  }
+}
