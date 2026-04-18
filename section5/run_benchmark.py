@@ -1,355 +1,193 @@
-"""
-Performance Comparison Tool
-Compare Flask vs Streamlit performance, validate results, and benchmark the API
-"""
+"""Compare ML and lexical model results and pick the best-performing model."""
 
-import time
+import argparse
 import json
-import sys
+from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Tuple
 
-import pandas as pd
+import matplotlib.pyplot as plt
 import numpy as np
-
-try:
-    import requests
-    from streamlit.web import cli as stcli
-except ImportError:
-    requests = None
-
-from model_loader import get_model
+import pandas as pd
 
 
-# ──────────────────────────────────────────────────────────────────────────────
-# ── PERFORMANCE BENCHMARK ─────────────────────────────────────────────────────
-# ──────────────────────────────────────────────────────────────────────────────
+def load_ml_reports(models_dir: Path):
+    rows = []
+    for report_path in sorted(models_dir.glob("*/ml_models_report.json")):
+        run_id = report_path.parent.name  # e.g. clean_1_tfidf
+        with report_path.open("r", encoding="utf-8") as f:
+            report = json.load(f)
 
-class PerformanceBenchmark:
-    """Benchmark and test model performance"""
-    
-    def __init__(self):
-        self.model = get_model()
-        self.results = []
-    
-    def benchmark_single_prediction(self, text: str, iterations: int = 100) -> Dict[str, float]:
-        """
-        Benchmark single text prediction
-        
-        Args:
-            text: Text to predict
-            iterations: Number of times to run
-            
-        Returns:
-            Dictionary with timing statistics
-        """
-        print(f"\n[*] Benchmarking single prediction ({iterations} iterations)...")
-        times = []
-        
-        for _ in range(iterations):
-            start = time.time()
-            self.model.predict(text)
-            end = time.time()
-            times.append((end - start) * 1000)  # Convert to ms
-        
-        return {
-            'iterations': iterations,
-            'avg_time_ms': np.mean(times),
-            'min_time_ms': np.min(times),
-            'max_time_ms': np.max(times),
-            'std_time_ms': np.std(times),
-            'total_time_ms': np.sum(times)
-        }
-    
-    def benchmark_batch_prediction(self, texts: List[str], iterations: int = 10) -> Dict[str, float]:
-        """
-        Benchmark batch prediction
-        
-        Args:
-            texts: List of texts to predict
-            iterations: Number of times to run
-            
-        Returns:
-            Dictionary with timing statistics
-        """
-        print(f"\n[*] Benchmarking batch prediction ({iterations} iterations)...")
-        times = []
-        
-        for _ in range(iterations):
-            start = time.time()
-            self.model.predict_batch(texts)
-            end = time.time()
-            times.append((end - start) * 1000)  # Convert to ms
-        
-        batch_size = len(texts)
-        
-        return {
-            'batch_size': batch_size,
-            'iterations': iterations,
-            'avg_time_ms': np.mean(times),
-            'avg_time_per_text_ms': np.mean(times) / batch_size,
-            'min_time_ms': np.min(times),
-            'max_time_ms': np.max(times),
-            'std_time_ms': np.std(times),
-            'throughput_texts_per_sec': (batch_size / (np.mean(times) / 1000))
-        }
-    
-    def test_consistency(self, text: str, iterations: int = 50) -> Dict[str, any]:
-        """Test if predictions are consistent across multiple runs"""
-        print(f"\n[*] Testing prediction consistency ({iterations} runs)...")
-        
-        results = []
-        for _ in range(iterations):
-            result = self.model.predict(text)
-            results.append(result['sentiment'])
-        
-        # Check if all predictions are the same
-        unique_predictions = set(results)
-        consistency = len(unique_predictions) == 1
-        
-        return {
-            'text': text,
-            'iterations': iterations,
-            'consistent': consistency,
-            'unique_predictions': len(unique_predictions),
-            'predictions': results,
-            'mode_sentiment': pd.Series(results).mode()[0]
-        }
-    
-    def test_edge_cases(self) -> Dict[str, any]:
-        """Test model behavior on edge cases"""
-        print("\n[*] Testing edge cases...")
-        
-        edge_cases = {
-            'empty_like': '',
-            'single_char': 'a',
-            'numbers_only': '12345',
-            'special_chars': '!@#$%^&*()',
-            'very_long': 'a' * 5000,
-            'unicode': '你好世界😀🎉',
-            'urls': 'http://example.com and https://test.org',
-            'emojis_only': '😀😁😂😃😄😅😆😇',
-            'repeated_words': 'good good good good good',
-            'mixed_case': 'ThIs Is A mIxEd CaSe TeXt'
-        }
-        
-        results = {}
-        for case_name, text in edge_cases.items():
-            try:
-                if text:  # Skip empty string
-                    result = self.model.predict(text)
-                    results[case_name] = {
-                        'success': True,
-                        'sentiment': result['sentiment'],
-                        'confidence': result['confidence']
-                    }
-                else:
-                    results[case_name] = {'success': False, 'error': 'Empty text'}
-            except Exception as e:
-                results[case_name] = {'success': False, 'error': str(e)}
-        
-        return results
-
-
-# ──────────────────────────────────────────────────────────────────────────────
-# ── API CLIENT BENCHMARK ──────────────────────────────────────────────────────
-# ──────────────────────────────────────────────────────────────────────────────
-
-class APIBenchmark:
-    """Benchmark Flask API performance"""
-    
-    def __init__(self, api_url: str = "http://localhost:5000"):
-        self.api_url = api_url
-        self.is_available = self._check_api()
-    
-    def _check_api(self) -> bool:
-        """Check if API is available"""
-        try:
-            response = requests.get(f"{self.api_url}/health", timeout=5)
-            return response.status_code == 200
-        except:
-            return False
-    
-    def benchmark_api_single(self, text: str, iterations: int = 50) -> Dict[str, float]:
-        """Benchmark API single prediction"""
-        if not self.is_available:
-            print("⚠ API not available at", self.api_url)
-            return {}
-        
-        print(f"\n[*] Benchmarking API single prediction ({iterations} iterations)...")
-        times = []
-        
-        for _ in range(iterations):
-            start = time.time()
-            response = requests.post(
-                f"{self.api_url}/predict",
-                json={'text': text},
-                timeout=10
+        for model_key, metrics in report.items():
+            rows.append(
+                {
+                    "family": "ml",
+                    "run_id": run_id,
+                    "feature_type": "tfidf" if run_id.endswith("_tfidf") else "glove",
+                    "preprocessing": run_id.replace("_tfidf", "").replace("_glove", ""),
+                    "model_key": model_key,
+                    "model_name": metrics.get("model", model_key),
+                    "accuracy": float(metrics.get("accuracy", 0.0)),
+                    "precision": float(metrics.get("precision", 0.0)),
+                    "recall": float(metrics.get("recall", 0.0)),
+                    "f1_score": float(metrics.get("f1_score", 0.0)),
+                    "confusion_matrix": metrics.get("confusion_matrix"),
+                    "source_report": str(report_path),
+                }
             )
-            response.raise_for_status()
-            end = time.time()
-            times.append((end - start) * 1000)
-        
-        return {
-            'iterations': iterations,
-            'avg_time_ms': np.mean(times),
-            'min_time_ms': np.min(times),
-            'max_time_ms': np.max(times),
-            'std_time_ms': np.std(times),
-        }
-    
-    def benchmark_api_batch(self, texts: List[str], iterations: int = 10) -> Dict[str, float]:
-        """Benchmark API batch prediction"""
-        if not self.is_available:
-            print("⚠ API not available at", self.api_url)
-            return {}
-        
-        print(f"\n[*] Benchmarking API batch prediction ({iterations} iterations)...")
-        times = []
-        
-        for _ in range(iterations):
-            start = time.time()
-            response = requests.post(
-                f"{self.api_url}/predict/batch",
-                json={'texts': texts},
-                timeout=30
+    return rows
+
+
+def load_lex_reports(lex_dir: Path):
+    rows = []
+    for report_path in sorted(lex_dir.glob("lexical_clean_*_report.json")):
+        run_id = report_path.stem.replace("_report", "")  # lexical_clean_1
+        with report_path.open("r", encoding="utf-8") as f:
+            report = json.load(f)
+
+        for model_key, metrics in report.items():
+            rows.append(
+                {
+                    "family": "lex",
+                    "run_id": run_id,
+                    "feature_type": "lexical",
+                    "preprocessing": run_id.replace("lexical_", ""),
+                    "model_key": model_key,
+                    "model_name": metrics.get("model", model_key),
+                    "accuracy": float(metrics.get("accuracy", 0.0)),
+                    "precision": float(metrics.get("precision", 0.0)),
+                    "recall": float(metrics.get("recall", 0.0)),
+                    "f1_score": float(metrics.get("f1_score", 0.0)),
+                    "confusion_matrix": metrics.get("confusion_matrix"),
+                    "source_report": str(report_path),
+                }
             )
-            response.raise_for_status()
-            end = time.time()
-            times.append((end - start) * 1000)
-        
-        return {
-            'batch_size': len(texts),
-            'iterations': iterations,
-            'avg_time_ms': np.mean(times),
-            'avg_time_per_text_ms': np.mean(times) / len(texts),
-            'throughput_texts_per_sec': (len(texts) / (np.mean(times) / 1000))
-        }
+    return rows
 
 
-# ──────────────────────────────────────────────────────────────────────────────
-# ── COMPARISON & REPORTING ────────────────────────────────────────────────────
-# ──────────────────────────────────────────────────────────────────────────────
+def save_visualizations(df: pd.DataFrame, out_dir: Path):
+    # Top models by F1 score
+    top = df.sort_values(["f1_score", "accuracy"], ascending=False).head(12)
+    plt.figure(figsize=(12, 6))
+    labels = [f"{r['model_name']}\n({r['run_id']})" for _, r in top.iterrows()]
+    plt.bar(range(len(top)), top["f1_score"], color="#2E86AB")
+    plt.xticks(range(len(top)), labels, rotation=45, ha="right")
+    plt.ylabel("F1 Score")
+    plt.title("Top Model Configurations by F1 Score")
+    plt.tight_layout()
+    plt.savefig(out_dir / "top_models_f1.png", dpi=200)
+    plt.close()
 
-class PerformanceReport:
-    """Generate performance comparison reports"""
-    
-    @staticmethod
-    def print_benchmark_results(result: Dict[str, float], title: str = "Benchmark Results"):
-        """Print formatted benchmark results"""
-        print(f"\n{'='*70}")
-        print(f"  {title}")
-        print(f"{'='*70}")
-        
-        for key, value in result.items():
-            if isinstance(value, float):
-                if 'ms' in key:
-                    print(f"  {key:.<40} {value:>12.2f} ms")
-                elif 'sec' in key:
-                    print(f"  {key:.<40} {value:>12.2f} texts/sec")
-                else:
-                    print(f"  {key:.<40} {value:>12.2f}")
-            else:
-                print(f"  {key:.<40} {value:>12}")
-        
-        print(f"{'='*70}\n")
-    
-    @staticmethod
-    def save_report(results: Dict[str, any], filepath: str = "performance_report.json"):
-        """Save report to JSON file"""
-        report = {
-            'timestamp': time.strftime('%Y-%m-%d %H:%M:%S'),
-            'results': results
-        }
-        
-        with open(filepath, 'w') as f:
-            json.dump(report, f, indent=2)
-        
-        print(f"✓ Report saved to {filepath}")
+    # Family average comparison (ML vs Lex)
+    family_avg = df.groupby("family")[["accuracy", "precision", "recall", "f1_score"]].mean()
+    family_avg.plot(kind="bar", figsize=(10, 6))
+    plt.title("Average Metrics by Model Family")
+    plt.ylabel("Score")
+    plt.ylim(0, 1)
+    plt.xticks(rotation=0)
+    plt.tight_layout()
+    plt.savefig(out_dir / "family_average_metrics.png", dpi=200)
+    plt.close()
+
+    # Best model confusion matrix
+    best = df.sort_values(["f1_score", "accuracy"], ascending=False).iloc[0]
+    cm = best["confusion_matrix"]
+    if isinstance(cm, list) and cm:
+        cm_arr = np.array(cm)
+        plt.figure(figsize=(6, 5))
+        plt.imshow(cm_arr, cmap="Blues")
+        plt.title(f"Confusion Matrix - Best Model\n{best['model_name']} ({best['run_id']})")
+        plt.xlabel("Predicted")
+        plt.ylabel("Actual")
+        for i in range(cm_arr.shape[0]):
+            for j in range(cm_arr.shape[1]):
+                plt.text(j, i, str(cm_arr[i, j]), ha="center", va="center", color="black")
+        plt.tight_layout()
+        plt.savefig(out_dir / "best_model_confusion_matrix.png", dpi=200)
+        plt.close()
 
 
-# ──────────────────────────────────────────────────────────────────────────────
-# ── MAIN BENCHMARK EXECUTION ──────────────────────────────────────────────────
-# ──────────────────────────────────────────────────────────────────────────────
+def main():
+    parser = argparse.ArgumentParser(description="Benchmark ML vs lexical models and select best run")
+    parser.add_argument("--section4-dir", default="../section4", help="Path to section4 directory")
+    parser.add_argument("--output-dir", default="benchmark", help="Path to save benchmark outputs")
+    args = parser.parse_args()
+
+    section4_dir = Path(args.section4_dir).resolve()
+    output_dir = Path(args.output_dir).resolve()
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    models_dir = section4_dir / "models"
+    lex_dir = section4_dir / "lex_model"
+
+    ml_rows = load_ml_reports(models_dir)
+    lex_rows = load_lex_reports(lex_dir)
+    all_rows = ml_rows + lex_rows
+
+    if not all_rows:
+        raise FileNotFoundError(
+            "No benchmarkable reports found. Expected ML reports in section4/models and "
+            "lexical reports in section4/lex_model."
+        )
+
+    df = pd.DataFrame(all_rows)
+    df = df.sort_values(["f1_score", "accuracy"], ascending=False).reset_index(drop=True)
+
+    best_overall = df.iloc[0].to_dict()
+    best_ml = df[df["family"] == "ml"].iloc[0].to_dict() if (df["family"] == "ml").any() else None
+    best_lex = df[df["family"] == "lex"].iloc[0].to_dict() if (df["family"] == "lex").any() else None
+
+    summary = {
+        "timestamp": datetime.now().isoformat(),
+        "total_runs": int(len(df)),
+        "total_ml_runs": int((df["family"] == "ml").sum()),
+        "total_lex_runs": int((df["family"] == "lex").sum()),
+        "best_overall": {
+            "model_name": best_overall["model_name"],
+            "family": best_overall["family"],
+            "run_id": best_overall["run_id"],
+            "accuracy": float(best_overall["accuracy"]),
+            "precision": float(best_overall["precision"]),
+            "recall": float(best_overall["recall"]),
+            "f1_score": float(best_overall["f1_score"]),
+            "source_report": best_overall["source_report"],
+        },
+        "best_ml": best_ml,
+        "best_lex": best_lex,
+    }
+
+    # Save tabular results + summary
+    df.to_csv(output_dir / "model_benchmark_table.csv", index=False)
+    with (output_dir / "benchmark_summary.json").open("w", encoding="utf-8") as f:
+        json.dump(summary, f, indent=2)
+
+    # Also write a compact markdown summary for easy reading
+    with (output_dir / "benchmark_summary.md").open("w", encoding="utf-8") as f:
+        f.write("# Benchmark Summary\n\n")
+        f.write(f"Total runs: {len(df)}  \\n")
+        f.write(f"ML runs: {(df['family'] == 'ml').sum()}  \\n")
+        f.write(f"Lexical runs: {(df['family'] == 'lex').sum()}\n\n")
+        f.write("## Best Overall\n")
+        f.write(f"- Model: {best_overall['model_name']}\\n")
+        f.write(f"- Family: {best_overall['family']}\\n")
+        f.write(f"- Run: {best_overall['run_id']}\\n")
+        f.write(f"- F1: {best_overall['f1_score']:.4f}\\n")
+        f.write(f"- Accuracy: {best_overall['accuracy']:.4f}\\n\n")
+        f.write("## Top 10 by F1\n\n")
+        for i, (_, row) in enumerate(df.head(10).iterrows(), 1):
+            f.write(
+                f"{i}. {row['model_name']} ({row['run_id']}, {row['family']}) - "
+                f"F1={row['f1_score']:.4f}, Acc={row['accuracy']:.4f}\n"
+            )
+
+    save_visualizations(df, output_dir)
+
+    print("\n" + "=" * 72)
+    print("Benchmark complete")
+    print("=" * 72)
+    print(f"Best overall: {best_overall['model_name']} ({best_overall['run_id']}, {best_overall['family']})")
+    print(f"F1: {best_overall['f1_score']:.4f} | Accuracy: {best_overall['accuracy']:.4f}")
+    print(f"Outputs saved in: {output_dir}")
+
 
 if __name__ == "__main__":
-    print("\n" + "="*70)
-    print("Sentiment Analysis - Performance Benchmark Suite")
-    print("="*70)
-    
-    # Sample texts for benchmarking
-    test_texts = [
-        "This product is absolutely amazing! I love it!",
-        "Terrible experience, would not recommend",
-        "It's okay, nothing special",
-        "Best purchase ever, highly recommend!",
-        "Worst product I've ever bought"
-    ]
-    
-    benchmark = PerformanceBenchmark()
-    
-    # Benchmark 1: Single prediction
-    result_single = benchmark.benchmark_single_prediction(test_texts[0], iterations=100)
-    PerformanceReport.print_benchmark_results(result_single, "Single Prediction Benchmark")
-    
-    # Benchmark 2: Batch prediction
-    result_batch = benchmark.benchmark_batch_prediction(test_texts, iterations=20)
-    PerformanceReport.print_benchmark_results(result_batch, "Batch Prediction Benchmark")
-    
-    # Benchmark 3: Consistency test
-    consistency_result = benchmark.test_consistency(test_texts[0], iterations=50)
-    print(f"\n{'='*70}")
-    print("  Prediction Consistency Test")
-    print(f"{'='*70}")
-    print(f"  Text: {consistency_result['text']}")
-    print(f"  Consistent: {'✓ Yes' if consistency_result['consistent'] else '✗ No'}")
-    print(f"  Mode Sentiment: {consistency_result['mode_sentiment']}")
-    print(f"  Unique Predictions: {consistency_result['unique_predictions']}")
-    print(f"{'='*70}\n")
-    
-    # Benchmark 4: Edge cases
-    edge_cases_result = benchmark.test_edge_cases()
-    print(f"\n{'='*70}")
-    print("  Edge Cases Test Results")
-    print(f"{'='*70}")
-    for case_name, result in edge_cases_result.items():
-        status = "✓" if result.get('success') else "✗"
-        if result.get('success'):
-            print(f"  {status} {case_name:.<40} {result['sentiment']} ({result['confidence']:.2%})")
-        else:
-            print(f"  {status} {case_name:.<40} {result.get('error', 'Error')}")
-    print(f"{'='*70}\n")
-    
-    # Try to benchmark API if available
-    print("[*] Checking Flask API availability...")
-    api_benchmark = APIBenchmark()
-    
-    if api_benchmark.is_available:
-        print("✓ Flask API is running!\n")
-        
-        api_result_single = api_benchmark.benchmark_api_single(test_texts[0], iterations=30)
-        PerformanceReport.print_benchmark_results(api_result_single, "API Single Prediction")
-        
-        api_result_batch = api_benchmark.benchmark_api_batch(test_texts, iterations=10)
-        PerformanceReport.print_benchmark_results(api_result_batch, "API Batch Prediction")
-    else:
-        print("⚠ Flask API is not running")
-        print("  Start it with: python flask_app.py\n")
-    
-    # Save report
-    all_results = {
-        'direct_single': result_single,
-        'direct_batch': result_batch,
-        'consistency': consistency_result,
-        'edge_cases': edge_cases_result
-    }
-    
-    if api_benchmark.is_available:
-        all_results['api_single'] = api_result_single
-        all_results['api_batch'] = api_result_batch
-    
-    PerformanceReport.save_report(all_results, "benchmark_report.json")
-    
-    print("="*70)
-    print("Benchmark Complete!")
-    print("="*70 + "\n")
+    main()

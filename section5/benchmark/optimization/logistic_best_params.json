@@ -1,0 +1,6 @@
+{
+  "clf__solver": "lbfgs",
+  "clf__penalty": "l2",
+  "clf__class_weight": null,
+  "clf__C": 1
+}

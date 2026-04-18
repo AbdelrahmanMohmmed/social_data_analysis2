@@ -1,0 +1,20 @@
+{
+  "features_file": "../section4/model/labeled_clean_2_glove_embeddings.csv",
+  "labels_file": "../section4/data/labeled_clean_2.csv",
+  "feature_columns": 100,
+  "train_samples": 160,
+  "test_samples": 40,
+  "search_iterations": 20,
+  "cv_folds": 4,
+  "best_model": {
+    "name": "random_forest",
+    "test_f1_weighted": 0.815479145978153,
+    "test_accuracy": 0.825,
+    "fit_status": "overfitting"
+  },
+  "classes": [
+    "Negative",
+    "Neutral",
+    "Positive"
+  ]
+}

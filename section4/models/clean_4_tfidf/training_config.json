@@ -1,5 +1,5 @@
 {
-  "feature_file": "section4/model/labeled_clean_4_tfidf_matrix.csv",
+  "feature_file": "/media/abdo/Games/social_data_analysis/section4/model/labeled_clean_4_tfidf_matrix.csv",
   "feature_type": "tfidf",
   "n_features": 471,
   "test_size": 0.2,
@@ -8,8 +8,6 @@
   "classes": [
     "Negative",
     "Neutral",
-    "Positive",
-    "Very Negative",
-    "Very Positive"
+    "Positive"
   ]
 }
